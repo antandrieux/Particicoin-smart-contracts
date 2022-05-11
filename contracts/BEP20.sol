@@ -8,11 +8,36 @@ import  "./SafeMath.sol";
 
 contract BEP20 is Context, IBEP20, Ownable {
   using SafeMath for uint256;
-  uint256 constant thirtyDays = 2592000;
+
+  uint256 constant thirtyDays      = 2592000;
   uint256 constant cliffSixM       = 6;
   uint256 constant cliffFourM      = 4;
   uint256 constant cliffThreeM     = 3;
   uint256 constant cliffOneM       = 1;
+
+  uint8   constant _decimals       = 9;
+  string  constant _name           = "Particicoin";
+  string  constant _symbol         = "PTC";
+
+  uint256 constant  _wallet1MonthlySupply        = 115694444           * (10 ** uint256(_decimals)); // Reserve
+  uint256 constant  _wallet2MonthlySupply        = 95000000            * (10 ** uint256(_decimals)); // Associates and Team (52 777 778 + 42 222 222)
+  uint256 constant  _wallet3MonthlySupply        = 214583334           * (10 ** uint256(_decimals)); // Platform, Private Sale and Marketing (35 416 667 + 37 500 000 + 141 666 667)
+  uint256 constant  _wallet4MonthlySupply        = 106250000           * (10 ** uint256(_decimals)); // ICO Round 1
+  uint256 constant  _wallet5MonthlySupply        = 200000000           * (10 ** uint256(_decimals)); // ICO Round 2
+
+  uint256 constant  _wallet1EndOfIcoSupply       = 367500008           * (10 ** uint256(_decimals));
+  uint256 constant  _wallet2EndOfIcoSupply       = 90000000            * (10 ** uint256(_decimals)); // Associates and Team (50 000 000 + 40 000 000)
+  uint256 constant  _wallet3EndOfIcoSupply       = 424999992           * (10 ** uint256(_decimals)); // Platform, Private Sale and Marketing (75 000 000 + 50 000 000 + 300 000 000)
+  uint256 constant  _wallet4EndOfIcoSupply       = 112500000           * (10 ** uint256(_decimals));
+  uint256 constant  _wallet5EndOfIcoSupply       = 200000000           * (10 ** uint256(_decimals));
+  uint256 constant  _wallet6EndOfIcoSupply       = 1000000000          * (10 ** uint256(_decimals));
+
+  uint256 constant  _maxSupply_6M                = 4250000000          * (10 ** uint256(_decimals)); // Reserve, Associates and Team cap
+  uint256 constant  _maxSupply_4M                = 3000000000          * (10 ** uint256(_decimals)); // Platform, Private Sale and Marketing cap
+  uint256 constant  _maxSupply_3M                = 750000000           * (10 ** uint256(_decimals)); // ICO Round 1 cap
+  uint256 constant  _maxSupply_1M                = 1000000000          * (10 ** uint256(_decimals)); // ICO Round 2 cap
+
+  uint256 constant  _maxSupply                   = 10000000000         * (10 ** uint256(_decimals)); // 10 MD
 
   mapping (address => uint256) private _balances;
 
@@ -24,35 +49,12 @@ contract BEP20 is Context, IBEP20, Ownable {
   uint256 private _totalSupply_3M;
   uint256 private _totalSupply_1M;
 
-  uint256 immutable private _maxSupply;
-  uint256 immutable private _maxSupply_6M;
-  uint256 immutable private _maxSupply_4M;
-  uint256 immutable private _maxSupply_3M;
-  uint256 immutable private _maxSupply_1M;
-
-  uint256 private _wallet1MonthlySupply;
-  uint256 private _wallet2MonthlySupply;
-  uint256 private _wallet3MonthlySupply;
-  uint256 private _wallet4MonthlySupply;
-  uint256 private _wallet5MonthlySupply;
-
-  uint256 private _wallet1EndOfIcoSupply;
-  uint256 private _wallet2EndOfIcoSupply;
-  uint256 private _wallet3EndOfIcoSupply;
-  uint256 private _wallet4EndOfIcoSupply;
-  uint256 private _wallet5EndOfIcoSupply;
-  uint256 private _wallet6EndOfIcoSupply;
-
-  uint8   private _decimals;
-  string  private _symbol;
-  string  private _name;
-
-  uint256 private _endOfICO;
-
   uint256 private _startTime_1M;
   uint256 private _startTime_3M;
   uint256 private _startTime_4M;
   uint256 private _startTime_6M;
+
+  uint256 private _endOfICO;
 
   address private _wallet1;
   address private _wallet2;
@@ -61,10 +63,14 @@ contract BEP20 is Context, IBEP20, Ownable {
   address private _wallet5;
   address private _wallet6;
 
-  constructor(address wallet1, address wallet2, address wallet3,address wallet4, address wallet5, address wallet6)  {
-    _name                 = "Particicoin";
-    _symbol               = "PTC";
-    _decimals             = 9;
+  constructor(address wallet1, address wallet2, address wallet3, address wallet4, address wallet5, address wallet6)  {
+    require(wallet1 != address(0), "BEP20: wallet1 is the zero address");
+    require(wallet2 != address(0), "BEP20: wallet2 is the zero address");
+    require(wallet3 != address(0), "BEP20: wallet3 is the zero address");
+    require(wallet4 != address(0), "BEP20: wallet4 is the zero address");
+    require(wallet5 != address(0), "BEP20: wallet5 is the zero address");
+    require(wallet6 != address(0), "BEP20: wallet6 is the zero address");
+    
     _balances[msg.sender] = 0;
 
     _endOfICO             = block.timestamp;
@@ -72,28 +78,6 @@ contract BEP20 is Context, IBEP20, Ownable {
     _startTime_3M         = _endOfICO + (thirtyDays * 3); // 3 month after
     _startTime_4M         = _endOfICO + (thirtyDays * 4); // 4 month after
     _startTime_6M         = _endOfICO + (thirtyDays * 6); // 6 month after
-
-    _wallet1MonthlySupply        = 115694444           * (10 ** uint256(_decimals)); // Reserve
-    _wallet2MonthlySupply        = 95000000            * (10 ** uint256(_decimals)); // Associates and Team (52 777 778 + 42 222 222)
-    _wallet3MonthlySupply        = 214583334           * (10 ** uint256(_decimals)); // Platform, Private Sale and Marketing (35 416 667 + 37 500 000 + 141 666 667)
-    _wallet4MonthlySupply        = 106250000           * (10 ** uint256(_decimals)); // ICO Round 1
-    _wallet5MonthlySupply        = 200000000           * (10 ** uint256(_decimals)); // ICO Round 2
-
-
-    _wallet1EndOfIcoSupply       = 367500008      * (10 ** uint256(_decimals));
-    _wallet2EndOfIcoSupply       = 90000000       * (10 ** uint256(_decimals)); // Associates and Team (50 000 000 + 40 000 000)
-    _wallet3EndOfIcoSupply       = 424999992      * (10 ** uint256(_decimals)); // Platform, Private Sale and Marketing (75 000 000 + 50 000 000 + 300 000 000)
-    _wallet4EndOfIcoSupply       = 112500000      * (10 ** uint256(_decimals));
-    _wallet5EndOfIcoSupply       = 200000000      * (10 ** uint256(_decimals));
-    _wallet6EndOfIcoSupply       = 1000000000     * (10 ** uint256(_decimals));
-
-
-    _maxSupply_6M         = 4250000000    * (10 ** uint256(_decimals)); // Reserve, Associates and Team cap
-    _maxSupply_4M         = 3000000000    * (10 ** uint256(_decimals)); // Platform, Private Sale and Marketing cap
-    _maxSupply_3M         = 750000000     * (10 ** uint256(_decimals)); // ICO Round 1 cap
-    _maxSupply_1M         = 1000000000    * (10 ** uint256(_decimals)); // ICO Round 2 cap
-
-    _maxSupply            = 10000000000   * (10 ** uint256(_decimals)); // 10 MD
 
 
     _wallet1        = wallet1; // Reserve address
@@ -113,14 +97,12 @@ contract BEP20 is Context, IBEP20, Ownable {
     _totalSupply_3M   = _totalSupply_3M.add(_wallet4EndOfIcoSupply);
     _totalSupply_4M   = _totalSupply_4M.add(_wallet3EndOfIcoSupply);
     _totalSupply_6M   = _totalSupply_6M.add(_wallet1EndOfIcoSupply).add(_wallet2EndOfIcoSupply);
-
-    _totalSupply.add(_wallet1EndOfIcoSupply).add(_wallet2EndOfIcoSupply).add(_wallet3EndOfIcoSupply).add(_wallet4EndOfIcoSupply).add(_wallet5EndOfIcoSupply).add(_wallet6EndOfIcoSupply);
   }
 
   /**
    * @dev Returns the bep token owner.
    */
-  function getOwner() public view override returns (address) {
+  function getOwner() external view override returns (address) {
     return owner();
   }
   /**
@@ -168,49 +150,49 @@ contract BEP20 is Context, IBEP20, Ownable {
   /**
    * @dev Returns the token decimals.
    */
-  function decimals() public view override returns (uint8) {
+  function decimals() external pure override returns (uint8) {
     return _decimals;
   }
 
   /**
    * @dev Returns the token symbol.
    */
-  function symbol() public view override returns (string memory) {
+  function symbol() external pure override returns (string memory) {
     return _symbol;
   }
 
   /**
   * @dev Returns the token name.
   */
-  function name() public view override returns (string memory) {
+  function name() external pure override returns (string memory) {
     return _name;
   }
 
   /**
    * @dev See {BEP20-totalSupply}.
    */
-  function totalSupply() public view override returns (uint256) {
+  function totalSupply() external view override returns (uint256) {
     return _totalSupply;
   }
 
   /**
    * @dev See {BEP20-balanceOf}.
    */
-  function balanceOf(address account) public view override returns (uint256) {
+  function balanceOf(address account) external view override returns (uint256) {
     return _balances[account];
   }
 
   /**
    * @dev Returns the cap on the token's total supply.
    */
-  function maxSupply() public view  returns (uint256) {
+  function maxSupply() public pure returns (uint256) {
     return _maxSupply;
   }
 
   /**
    * @dev Returns the end of ico .
    */
-  function getEndOfICO() public view  returns (uint256) {
+  function getEndOfICO() external view returns (uint256) {
     return _endOfICO;
   }
 
@@ -229,7 +211,7 @@ contract BEP20 is Context, IBEP20, Ownable {
    * - `recipient` cannot be the zero address.
    * - the caller must have a balance of at least `amount`.
    */
-  function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+  function transfer(address recipient, uint256 amount) external virtual override returns (bool) {
     _transfer(_msgSender(), recipient, amount);
     return true;
   }
@@ -237,7 +219,7 @@ contract BEP20 is Context, IBEP20, Ownable {
   /**
    * @dev See {BEP20-allowance}.
    */
-  function allowance(address owner, address spender) public view override returns (uint256) {
+  function allowance(address owner, address spender) external view override returns (uint256) {
     return _allowances[owner][spender];
   }
 
@@ -248,7 +230,7 @@ contract BEP20 is Context, IBEP20, Ownable {
    *
    * - `spender` cannot be the zero address.
    */
-  function approve(address spender, uint256 amount) public virtual override returns (bool) {
+  function approve(address spender, uint256 amount) external virtual override returns (bool) {
     _approve(_msgSender(), spender, amount);
     return true;
   }
@@ -265,7 +247,7 @@ contract BEP20 is Context, IBEP20, Ownable {
    * - the caller must have allowance for `sender`'s tokens of at least
    * `amount`.
    */
-  function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
+  function transferFrom(address sender, address recipient, uint256 amount) external virtual override returns (bool) {
     _transfer(sender, recipient, amount);
     _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "BEP20: transfer amount exceeds allowance"));
     return true;
@@ -283,7 +265,7 @@ contract BEP20 is Context, IBEP20, Ownable {
    *
    * - `spender` cannot be the zero address.
    */
-  function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
+  function increaseAllowance(address spender, uint256 addedValue) external returns (bool) {
     _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
     return true;
   }
@@ -302,7 +284,7 @@ contract BEP20 is Context, IBEP20, Ownable {
    * - `spender` must have allowance for the caller of at least
    * `subtractedValue`.
    */
-  function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
+  function decreaseAllowance(address spender, uint256 subtractedValue) external returns (bool) {
     _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "BEP20: decreased allowance below zero"));
     return true;
   }
@@ -313,7 +295,7 @@ contract BEP20 is Context, IBEP20, Ownable {
 	 * reserveAdd), increasing _totalSupply_XM sub-supplies and
 	 * the total supply
   */
-  function mint(uint256 mintValue) public onlyOwner returns (bool) {
+  function mint(uint256 mintValue) external onlyOwner returns (bool) {
     require(( mintValue == cliffSixM) ||  (mintValue == cliffFourM) || (mintValue == cliffThreeM) || (mintValue == cliffOneM), "BEP20: mint value not authorized");
     
     if (mintValue == cliffSixM){
@@ -358,7 +340,7 @@ contract BEP20 is Context, IBEP20, Ownable {
     *
     * See {ERC20-_burn}.
     */
-  function burn(uint256 amount) public returns (bool) {
+  function burn(uint256 amount) external returns (bool) {
     _burn(_msgSender(), amount);
     return true;
   }
@@ -374,7 +356,7 @@ contract BEP20 is Context, IBEP20, Ownable {
     * - the caller must have allowance for ``accounts``'s tokens of at least
     * `amount`.
     */
-  function burnFrom(address account, uint256 amount) public returns (bool) {
+  function burnFrom(address account, uint256 amount) external returns (bool) {
     _burnFrom(account, amount);
     return true;
   }
