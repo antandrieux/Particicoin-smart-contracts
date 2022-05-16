@@ -39,6 +39,13 @@ contract BEP20 is Context, IBEP20, Ownable {
 
   uint256 constant  _maxSupply                   = 10000000000         * (10 ** uint256(_decimals)); // 10 MD
 
+  address private immutable _wallet1;
+  address private immutable _wallet2;
+  address private immutable _wallet3;
+  address private immutable _wallet4;
+  address private immutable _wallet5;
+  address private immutable _wallet6;
+
   mapping (address => uint256) private _balances;
 
   mapping (address => mapping (address => uint256)) private _allowances;
@@ -56,12 +63,6 @@ contract BEP20 is Context, IBEP20, Ownable {
 
   uint256 private _endOfICO;
 
-  address private _wallet1;
-  address private _wallet2;
-  address private _wallet3;
-  address private _wallet4;
-  address private _wallet5;
-  address private _wallet6;
 
   constructor(address wallet1, address wallet2, address wallet3, address wallet4, address wallet5, address wallet6)  {
     require(wallet1 != address(0), "BEP20: wallet1 is the zero address");
@@ -79,7 +80,6 @@ contract BEP20 is Context, IBEP20, Ownable {
     _startTime_4M         = _endOfICO + (thirtyDays * 4); // 4 month after
     _startTime_6M         = _endOfICO + (thirtyDays * 6); // 6 month after
 
-
     _wallet1        = wallet1; // Reserve address
     _wallet2        = wallet2; // Associates and Team address
     _wallet3        = wallet3; // Platform, Private Sale and Marketing Address
@@ -87,12 +87,12 @@ contract BEP20 is Context, IBEP20, Ownable {
     _wallet5        = wallet5; // Round 2 Address
     _wallet6        = wallet6; // Round 3 Address
 
-    _mint(_wallet1, _wallet1EndOfIcoSupply);
-    _mint(_wallet2, _wallet2EndOfIcoSupply);
-    _mint(_wallet3, _wallet3EndOfIcoSupply);
-    _mint(_wallet4, _wallet4EndOfIcoSupply);
-    _mint(_wallet5, _wallet5EndOfIcoSupply);
-    _mint(_wallet6, _wallet6EndOfIcoSupply);
+    _mint(wallet1, _wallet1EndOfIcoSupply);
+    _mint(wallet2, _wallet2EndOfIcoSupply);
+    _mint(wallet3, _wallet3EndOfIcoSupply);
+    _mint(wallet4, _wallet4EndOfIcoSupply);
+    _mint(wallet5, _wallet5EndOfIcoSupply);
+    _mint(wallet6, _wallet6EndOfIcoSupply);
     _totalSupply_1M   = _totalSupply_1M.add(_wallet5EndOfIcoSupply);
     _totalSupply_3M   = _totalSupply_3M.add(_wallet4EndOfIcoSupply);
     _totalSupply_4M   = _totalSupply_4M.add(_wallet3EndOfIcoSupply);
